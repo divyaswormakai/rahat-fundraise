@@ -4,9 +4,10 @@ import { validationResult } from 'express-validator';
 import { IUser } from '../interfaces/models/User';
 import { IRequest, IResponse } from '../interfaces/vendors';
 
-import { secret } from '../config/keys';
 import User from '../models/User.model';
-import { convertUserData } from '../utils/helper';
+import transporter from '../services/mail.service';
+import { secret, senderEmail } from '../config/keys';
+import { convertUserData, generateOTP } from '../utils/helper';
 
 export const pingUser = async (req: IRequest, res: IResponse) => {
   try {
@@ -188,25 +189,110 @@ export const getProfile = async (req: IRequest, res: IResponse) => {
 export const userLogin = async (req: IRequest, res: IResponse) => {
   try {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({ ok: false, errors: errors.array() });
     }
+
     const { email } = req.body;
     const user = await User.findOne({ email });
 
     if (!user) {
       throw new Error(`User with ${email} not found.`);
     }
-    console.log(user);
+
     const token = jsonwebtoken.sign(
       { id: user?._id, email: user?.email, alias: user?.alias },
       secret,
     );
+
     return res.json({
       ok: true,
-      msg: 'Login Successful',
+      msg: 'User Verified',
       data: convertUserData(user?.toJSON()),
       token,
+      isEmailVerified: true,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(401).json({ ok: false, msg: error.message });
+    }
+
+    return res.status(401).json({ ok: false, msg: 'User Route Error' });
+  }
+};
+
+export const sendOTP = async (req: IRequest, res: IResponse) => {
+  try {
+    // const errors = validationResult(req);
+
+    // if (!errors.isEmpty()) {
+    //   return res.status(400).json({ ok: false, errors: errors.array() });
+    // }
+
+    const { email } = req.body;
+
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      throw new Error(`User with ${email} not found.`);
+    }
+    const OTP = generateOTP();
+
+    console.log('OTP: ', OTP);
+
+    const message = {
+      from: senderEmail,
+      to: email,
+      subject: 'OTP for Login',
+      text: `Your OTP is ${OTP}`,
+    };
+
+    user.otp.number = OTP;
+    user.otp.expiry = Date.now() + 5 * 60000;
+
+    await user.save({ validateModifiedOnly: true });
+
+    await transporter.sendMail(message);
+
+    //   SEND SMS
+
+    res.json({
+      ok: true,
+      msg: 'OTP Sent',
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(401).json({ ok: false, msg: error.message });
+    }
+
+    return res.status(401).json({ ok: false, msg: 'User Route Error' });
+  }
+};
+
+export const verifyOTP = async (req: IRequest, res: IResponse) => {
+  try {
+    const { otpNumber } = req.body;
+
+    const user = await User.findOne({ 'otp.number': otpNumber });
+
+    const { number, expiry } = user.otp;
+
+    if (number !== otpNumber || expiry < Date.now()) {
+      throw new Error(`Invalid/Expired OTP.`);
+    }
+
+    // return json web token in response
+    // for user populate verification model that relate to specific user
+    const token = jsonwebtoken.sign(
+      { id: user?._id, email: user?.email, alias: user?.alias },
+      secret,
+    );
+
+    res.json({
+      ok: true,
+      token: token,
+      msg: 'OTP Verified',
     });
   } catch (error) {
     if (error instanceof Error) {

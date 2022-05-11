@@ -5,9 +5,9 @@ import { IUser } from '../interfaces/models';
 
 const UserSchema = new mongoose.Schema<IUser>(
   {
-    name: { type: String, required: true },
-    address: { type: String, required: true },
-    phone: { type: String, required: true },
+    name: { type: String },
+    address: { type: String },
+    phone: { type: String },
     email: { type: String, required: true, unique: true },
     emailVerified: { type: Boolean, required: true, default: false },
     social: [{ type: String }],

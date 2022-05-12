@@ -12,8 +12,8 @@ import "./style.scss";
 
 const LoginPage = (props) => {
   const [value, setValue] = useState({
-    email: "",
-    // password: "",
+    email: "user@gmail.com",
+    password: "123456",
     remember: false,
   });
 
@@ -35,60 +35,45 @@ const LoginPage = (props) => {
   const submitForm = async (e) => {
     e.preventDefault();
     if (validator.allValid()) {
-      try {
-        const resData = await fetch("http://localhost:8080/api/user/login", {
-          method: "POST",
-          body: JSON.stringify({
-            email: value.email,
-          }),
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }).then((res) => res.json());
-
-        console.log({ resData });
-
-        if (resData.data.email) {
-          const email = resData.data.email;
-
-          const otpRes = await fetch("http://localhost:8080/api/user/otp", {
+      if (validator.allValid()) {
+        try {
+          const resData = await fetch("http://localhost:8080/api/user/login", {
             method: "POST",
             body: JSON.stringify({
-              email: email,
+              email: value.email,
             }),
+
             headers: {
               "Content-Type": "application/json",
             },
           }).then((res) => res.json());
 
-          if (otpRes.ok) {
-            toast.success("OTP has been sent to your email");
+          console.log({ resData });
+
+          if (resData.data.email) {
+            const email = resData.data.email;
+
+            const otpRes = await fetch("http://localhost:8080/api/user/otp", {
+              method: "POST",
+              body: JSON.stringify({
+                email: email,
+              }),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }).then((res) => res.json());
+
+            if (otpRes.ok) {
+              toast.success("OTP has been sent to your email");
+            }
           }
+        } catch (error) {
+          toast.error(error.message);
         }
-      } catch (error) {
-        toast.error(error.message);
       }
-
-      setValue({
-        email: "",
-        // password: "",
-        remember: false,
-      });
-      validator.hideMessages();
-
-      const userRegex = /^user+.*/gm;
-      const email = value.email;
-
-      if (email.match(userRegex)) {
-        toast.success("You successfully Login on charitio !");
-        props.history.push("/home");
-      }
-    } else {
-      validator.showMessages();
-      toast.error("Empty field is not allowed!");
     }
   };
+
   return (
     <Grid className="loginWrapper">
       <Grid className="loginForm">
@@ -113,7 +98,7 @@ const LoginPage = (props) => {
               />
               {validator.message("email", value.email, "required|email")}
             </Grid>
-            {/* <Grid item xs={12}>
+            <Grid item xs={12}>
               <TextField
                 className="inputOutline"
                 fullWidth
@@ -130,7 +115,7 @@ const LoginPage = (props) => {
                 onChange={(e) => changeHandler(e)}
               />
               {validator.message("password", value.password, "required")}
-            </Grid> */}
+            </Grid>
             <Grid item xs={12}>
               <Grid className="formAction">
                 <FormControlLabel
@@ -147,6 +132,11 @@ const LoginPage = (props) => {
               <Grid className="formFooter">
                 <Button fullWidth className="cBtnTheme" type="submit">
                   Login
+                </Button>
+              </Grid>
+              <Grid className="loginWithSocial">
+                <Button className="google">
+                  <i className="fa fa-google mr-4"></i> Sign up using google
                 </Button>
               </Grid>
               <p className="noteHelp">

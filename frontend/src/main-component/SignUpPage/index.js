@@ -6,8 +6,6 @@ import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import { Link, withRouter } from "react-router-dom";
 
-import axios from "axios";
-
 const SignUpPage = (props) => {
   const [value, setValue] = useState({
     email: "",
@@ -28,21 +26,6 @@ const SignUpPage = (props) => {
       className: "errorMessage",
     })
   );
-
-  //   useEffect(() => {
-  //     fetch("http://localhost:8080/api/user/register", {
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         email: value.email,
-  //         full_name: value.full_name,
-  //         password: value.password,
-  //       }),
-
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-  //   }, [submit]);
 
   const submitForm = (e) => {
     e.preventDefault();

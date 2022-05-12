@@ -1,0 +1,11 @@
+{
+  "errors": [
+    { "msg": "Invalid value", "param": "title", "location": "body" },
+    { "msg": "Invalid value", "param": "title", "location": "body" },
+    { "msg": "Invalid value", "param": "excerpt", "location": "body" },
+    { "msg": "Invalid value", "param": "target", "location": "body" },
+    { "msg": "Invalid value", "param": "amount", "location": "body" },
+    { "msg": "Invalid value", "param": "expiryDate", "location": "body" },
+    { "msg": "Invalid value", "param": "expiryDate", "location": "body" }
+  ]
+}
